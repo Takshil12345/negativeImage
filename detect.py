@@ -16,7 +16,7 @@ import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 
-FILE = Path(__file__).absolute()
+FILE = Path(_file_).absolute()
 sys.path.append(FILE.parents[0].as_posix())  # add yolov5/ to path
 
 from models.experimental import attempt_load
@@ -171,11 +171,12 @@ def run(weights='yolov5s.pt',  # model.pt path(s)
 
         # Process predictions
         for i, det in enumerate(pred):  # detections per image
+            # print(pred)
             if webcam:  # batch_size >= 1
                 p, s, im0, frame = path[i], f'{i}: ', im0s[i].copy(), dataset.count
             else:
                 p, s, im0, frame = path, '', im0s.copy(), getattr(dataset, 'frame', 0)
-
+            # print(im0)
             p = Path(p)  # to Path
             save_path = str(save_dir / p.name)  # img.jpg
             txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # img.txt
@@ -194,6 +195,16 @@ def run(weights='yolov5s.pt',  # model.pt path(s)
 
                 # Write results
                 for *xyxy, conf, cls in reversed(det):
+                    c = int(cls)  # integer class
+                    if names[c] in ('Motorcycle','Bicycle'):
+                        print(p.name)
+                        # Open the file in append mode
+                        file = open('/kaggle/input/finalbikedetector/Vehicle-Detection-main/train.txt', 'a')
+                        # Append content to the file
+                        file.write(f'{p.name}\n')
+                        # Close the file
+                        file.close()
+                        break
                     if save_txt:  # Write to file
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
                         line = (cls, *xywh, conf) if save_conf else (cls, *xywh)  # label format
@@ -202,6 +213,8 @@ def run(weights='yolov5s.pt',  # model.pt path(s)
 
                     if save_img or save_crop or view_img:  # Add bbox to image
                         c = int(cls)  # integer class
+                        # if names[c]=='Motorcycle':
+                        #     print(p.name)
                         label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
                         annotator.box_label(xyxy, label, color=colors(c, True))
                         if save_crop:
@@ -282,6 +295,6 @@ def main(opt):
     run(**vars(opt))
 
 
-if __name__ == "__main__":
+if _name_ == "_main_":
     opt = parse_opt()
     main(opt)
